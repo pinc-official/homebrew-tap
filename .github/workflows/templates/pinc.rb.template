@@ -3,11 +3,10 @@ class Pinc < Formula
   homepage "https://github.com/pinc-official/pinc-playground"
   license "MIT"
 
-  depends_on "vips"
-
   bottle do
     root_url "${BASE_URL}"
-${BOTTLE_LINES}  end
+${BOTTLE_LINES}
+  end
 
   depends_on "vips"
 
