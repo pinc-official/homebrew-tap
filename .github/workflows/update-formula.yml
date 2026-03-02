@@ -10,10 +10,8 @@ jobs:
   check-assets:
     runs-on: ubuntu-latest
     outputs:
-      has_darwin_amd64: ${{ steps.check.outputs.has_darwin_amd64 }}
-      has_darwin_arm64: ${{ steps.check.outputs.has_darwin_arm64 }}
-      has_linux_arm64: ${{ steps.check.outputs.has_linux_arm64 }}
-      has_linux_amd64: ${{ steps.check.outputs.has_linux_amd64 }}
+      has_amd64_sequoia: ${{ steps.check.outputs.has_amd64_sequoia }}
+      has_arm64_sequoia: ${{ steps.check.outputs.has_arm64_sequoia }}
     steps:
       - name: Check available assets
         id: check
@@ -24,21 +22,13 @@ jobs:
           gh release view "${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name' > assets.txt
           cat assets.txt
 
-          grep -q "pinc-${VERSION}-darwin-amd64.tar.gz" assets.txt \
-            && echo "has_darwin_amd64=true" >> $GITHUB_OUTPUT \
-            || echo "has_darwin_amd64=false" >> $GITHUB_OUTPUT
+          grep -q "pinc-${VERSION}.amd64_sequoia.bottle.tar.gz" assets.txt \
+            && echo "has_amd64_sequoia=true" >> $GITHUB_OUTPUT \
+            || echo "has_amd64_sequoia=false" >> $GITHUB_OUTPUT
 
-          grep -q "pinc-${VERSION}-darwin-arm64.tar.gz" assets.txt \
-            && echo "has_darwin_arm64=true" >> $GITHUB_OUTPUT \
-            || echo "has_darwin_arm64=false" >> $GITHUB_OUTPUT
-
-          grep -q "pinc-${VERSION}-linux-amd64.tar.gz" assets.txt \
-            && echo "has_linux_amd64=true" >> $GITHUB_OUTPUT \
-            || echo "has_linux_amd64=false" >> $GITHUB_OUTPUT
-
-          grep -q "pinc-${VERSION}-linux-arm64.tar.gz" assets.txt \
-            && echo "has_linux_arm64=true" >> $GITHUB_OUTPUT \
-            || echo "has_linux_arm64=false" >> $GITHUB_OUTPUT
+          grep -q "pinc-${VERSION}.arm64_sequoia.bottle.tar.gz" assets.txt \
+            && echo "has_arm64_sequoia=true" >> $GITHUB_OUTPUT \
+            || echo "has_arm64_sequoia=false" >> $GITHUB_OUTPUT
 
   update-formula:
     needs: check-assets
@@ -62,8 +52,8 @@ jobs:
       - name: Compute SHA256s
         id: sha256
         run: |
-          for PLATFORM in darwin-amd64 darwin-arm64 linux-amd64 linux-arm64; do
-            FILE="pinc-${VERSION}-${PLATFORM}.tar.gz"
+          for PLATFORM in amd64_sequoia arm64_sequoia; do
+            FILE="pinc-${VERSION}.${PLATFORM}.bottle.tar.gz"
             if [ -f "${FILE}" ]; then
               SHA=$(sha256sum "${FILE}" | awk '{print $1}')
               echo "${PLATFORM//-/_}=${SHA}" >> $GITHUB_OUTPUT
@@ -73,17 +63,11 @@ jobs:
       - name: Update formula
         run: |
           BOTTLE_LINES=""
-          if [ "${{ needs.check-assets.outputs.has_darwin_arm64 }}" == "true" ]; then
-            BOTTLE_LINES="${BOTTLE_LINES}    sha256 cellar: :any_skip_relocation, arm64_sequoia: \"${{ steps.sha256.outputs.darwin_arm64 }}\"\n"
+          if [ "${{ needs.check-assets.outputs.has_arm64_sequoia }}" == "true" ]; then
+            BOTTLE_LINES="${BOTTLE_LINES}    sha256 cellar: :any_skip_relocation, arm64_sequoia: \"${{ steps.sha256.outputs.arm64_sequoia }}\"\n"
           fi
-          if [ "${{ needs.check-assets.outputs.has_darwin_amd64 }}" == "true" ]; then
-            BOTTLE_LINES="${BOTTLE_LINES}    sha256 cellar: :any_skip_relocation, sequoia: \"${{ steps.sha256.outputs.darwin_amd64 }}\"\n"
-          fi
-          if [ "${{ needs.check-assets.outputs.has_linux_amd64 }}" == "true" ]; then
-            BOTTLE_LINES="${BOTTLE_LINES}    sha256 cellar: :any_skip_relocation, x86_64_linux: \"${{ steps.sha256.outputs.linux_amd64 }}\"\n"
-          fi
-          if [ "${{ needs.check-assets.outputs.has_linux_arm64 }}" == "true" ]; then
-            BOTTLE_LINES="${BOTTLE_LINES}    sha256 cellar: :any_skip_relocation, arm64_linux: \"${{ steps.sha256.outputs.linux_arm64 }}\"\n"
+          if [ "${{ needs.check-assets.outputs.has_amd64_sequoia }}" == "true" ]; then
+            BOTTLE_LINES="${BOTTLE_LINES}    sha256 cellar: :any_skip_relocation, sequoia: \"${{ steps.sha256.outputs.amd64_sequoia }}\"\n"
           fi
 
           export BASE_URL
