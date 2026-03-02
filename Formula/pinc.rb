@@ -5,19 +5,11 @@ class Pinc < Formula
 
   depends_on "vips"
 
-  on_macos do
-    on_arm do
-      url "https://github.com/pinc-official/homebrew-tap/releases/download/0.0.1/pinc-0.0.1-aarch64-macos.tar.gz"
-      sha256 "d84959b4090bbb7dc9a1413cd932732d0c9acd4deb3e15cde19a7d91a409744e"
-    end
+  bottle do
+    root_url "https://github.com/pinc-official/homebrew-tap/releases/download/0.0.2"
   end
 
-  on_linux do
-    on_intel do
-      url "https://github.com/pinc-official/homebrew-tap/releases/download/0.0.1/pinc-0.0.1-x86_64-linux-gnu.tar.gz"
-      sha256 "e90baf58e8ae907c1c98714a2a2acd094753007210054b7cd3e64ec94e19b1ad"
-    end
-  end
+  depends_on "vips"
 
   def install
     bin.install "bin/pinc"
